@@ -10,40 +10,46 @@ import requests
 from PIL import Image
 from selenium import webdriver
 
-number_of_images = 5
+
+number_of_images = 2
 GET_IMAGE_TIMEOUT = 2
 SLEEP_BETWEEN_INTERACTIONS = 0.1
 SLEEP_BEFORE_MORE = 5
 IMAGE_QUALITY = 85
 
-output_path = "/images"
+output_path = "\images"
 search_terms = [
-    "appel",
+    "Appel",
 ]
 dirs = glob(output_path + "*")
 dirs = [dir.split("/")[-1].replace("_", " ") for dir in dirs]
 search_terms = [term for term in search_terms if term not in dirs]
 
-chromedriver = "PATH/chromedriver_win32/chromedriver.exe"
+chromedriver = "C:/Users/malforwi/PycharmProjects/image_scraper/chromedriver_win32/chromedriver.exe"
 
 driver = webdriver.Chrome(chromedriver)
 
+from pathlib import Path
 
-class timeout:
-    def __init__(self, seconds=1, error_message="Timeout"):
-        self.seconds = seconds
-        self.error_message = error_message
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-    def handle_timeout(self, signum, frame):
-        raise TimeoutError(self.error_message)
-
-    def __enter__(self):
-        signal.signal(signal.SIGALRM, self.handle_timeout)
-        signal.alarm(self.seconds)
-
-    def __exit__(self, type, value, traceback):
-        signal.alarm(0)
-
+#
+# class timeout:
+#     def __init__(self, seconds=1, error_message="Timeout"):
+#         self.seconds = seconds
+#         self.error_message = error_message
+#
+#     def handle_timeout(self, signum, frame):
+#         raise TimeoutError(self.error_message)
+#
+#     def __enter__(self):
+#         signal.signal(signal.SIGALRM, self.handle_timeout)
+#         signal.alarm(self.seconds)
+#
+#     def __exit__(self, type, value, traceback):
+#         signal.alarm(0)
+#
 
 def fetch_image_urls(query: str, max_links_to_fetch: int, wd: driver, sleep_between_interactions: int = 1, ):
     def scroll_to_end(wd):
@@ -127,9 +133,9 @@ def persist_image(folder_path: str, url: str):
     try:
         print("Getting images")
         # Download the images.  If timeout is exceeded, throw an error.
-        with timeout(GET_IMAGE_TIMEOUT):
-            image_content = requests.get(url).content
-            print(image_content)
+        # with timeout(GET_IMAGE_TIMEOUT):
+        image_content = requests.get(url).content
+        print(image_content)
 
     except Exception as e:
         print(f"ERROR - Could not download {url} - {e}")
@@ -151,13 +157,15 @@ def persist_image(folder_path: str, url: str):
         print(f"ERROR - Could not save {url} - {e}")
 
 
-def search_and_download(search_term: str, target_path="./images", number_images=5):
+def search_and_download(search_term: str, target_path=".\images", number_images=5):
     # Create a folder name.
     target_folder = os.path.join(target_path, "_".join(search_term.lower().split(" ")))
+    print(target_folder)
 
     # Create images folder if needed.
-    if not os.path.exists(target_folder):
-        os.makedirs(target_folder)
+    path = str(BASE_DIR) + target_folder
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     # Open Chrome
     with driver as wd:
@@ -171,11 +179,11 @@ def search_and_download(search_term: str, target_path="./images", number_images=
         print(res)
 
         # Download the images.
-        # if res is not None:
-        #     for elem in res:
-        #         persist_image(target_folder, elem)
-        # else:
-        #     print(f"Failed to return links for term: {search_term}")
+        if res is not None:
+            for elem in res:
+                persist_image(target_folder, elem)
+        else:
+            print(f"Failed to return links for term: {search_term}")
 
 
 # Loop through all the search terms.
